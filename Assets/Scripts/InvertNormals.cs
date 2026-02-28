@@ -9,13 +9,11 @@ public class InvertNormals : MonoBehaviour
     {
         Mesh mesh = GetComponent<MeshFilter>().mesh;
 
-        // Invertir normales
         Vector3[] normals = mesh.normals;
         for (int i = 0; i < normals.Length; i++)
             normals[i] = -normals[i];
         mesh.normals = normals;
 
-        // Invertir triángulos (para que la cara interior sea visible)
         for (int i = 0; i < mesh.subMeshCount; i++)
         {
             int[] tris = mesh.GetTriangles(i);
