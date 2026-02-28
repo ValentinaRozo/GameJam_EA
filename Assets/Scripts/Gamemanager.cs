@@ -8,7 +8,7 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     [Header("Score")]
-    public int maxScore = 3; // <-- 3 goles
+    public int maxScore = 3;
     public int scoreA = 0;
     public int scoreB = 0;
 
@@ -16,6 +16,8 @@ public class GameManager : MonoBehaviour
     public TextMeshProUGUI scoreTextA;
     public TextMeshProUGUI scoreTextB;
     public TextMeshProUGUI goalAnnouncerText;
+    public TextMeshProUGUI matchTimerText;    // cronometro superior central
+    public TextMeshProUGUI countdownText;     // "3 2 1" centro pantalla
 
     [Header("Scenes")]
     public string winScene = "Win";
@@ -26,6 +28,8 @@ public class GameManager : MonoBehaviour
 
     public static event System.Action OnGoalScored;
     public bool gameEnded = false;
+
+    private float matchTime = 0f;
 
     void Awake()
     {
@@ -38,67 +42,84 @@ public class GameManager : MonoBehaviour
         gameEnded = false;
         scoreA = 0;
         scoreB = 0;
+        matchTime = 0f;
         UpdateUI();
 
-        if (goalAnnouncerText != null)
-            goalAnnouncerText.gameObject.SetActive(false);
+        if (goalAnnouncerText != null) goalAnnouncerText.gameObject.SetActive(false);
+        if (countdownText != null) countdownText.gameObject.SetActive(false);
+    }
+
+    void Update()
+    {
+        if (gameEnded) return;
+        matchTime += Time.deltaTime;
+        UpdateMatchTimer();
+    }
+
+    void UpdateMatchTimer()
+    {
+        if (matchTimerText == null) return;
+        int minutes = (int)(matchTime / 60f);
+        int seconds = (int)(matchTime % 60f);
+        matchTimerText.text = string.Format("{0:00}:{1:00}", minutes, seconds);
     }
 
     public void TeamAScored()
     {
         if (gameEnded) return;
-
         scoreA++;
         UpdateUI();
         OnGoalScored?.Invoke();
 
-        if (scoreA >= maxScore)
-        {
-            EndGameAndLoad(winScene, "You Win!");
-        }
-        else
-        {
-            SafeShowAnnouncer("Team A scored!");
-            Respawn();
-        }
+        if (scoreA >= maxScore) EndGameAndLoad(winScene, "You Win!");
+        else StartCoroutine(RespawnWithCountdown("Team A scored!"));
     }
 
     public void TeamBScored()
     {
         if (gameEnded) return;
-
         scoreB++;
         UpdateUI();
         OnGoalScored?.Invoke();
 
-        if (scoreB >= maxScore)
+        if (scoreB >= maxScore) EndGameAndLoad(gameOverScene, "Game Over!");
+        else StartCoroutine(RespawnWithCountdown("Team B scored!"));
+    }
+
+    IEnumerator RespawnWithCountdown(string goalMsg)
+    {
+        // Muestra "Team X scored!" brevemente
+        SafeShowAnnouncer(goalMsg);
+
+        // Llama al respawn del spawnManager (congela jugadores)
+        if (spawnManager != null) spawnManager.RespawnAfterGoal();
+        else FindObjectOfType<RandomSpawnManager>()?.RespawnAfterGoal();
+
+        // Countdown 3 - 2 - 1
+        if (countdownText != null) countdownText.gameObject.SetActive(true);
+
+        for (int i = 3; i >= 1; i--)
         {
-            EndGameAndLoad(gameOverScene, "Game Over!");
+            if (countdownText != null) countdownText.text = i.ToString();
+            yield return new WaitForSeconds(1f);
         }
-        else
-        {
-            SafeShowAnnouncer("Team B scored!");
-            Respawn();
-        }
+
+        if (countdownText != null) countdownText.gameObject.SetActive(false);
+        if (goalAnnouncerText != null) goalAnnouncerText.gameObject.SetActive(false);
     }
 
     void EndGameAndLoad(string sceneName, string message)
     {
         gameEnded = true;
         SafeShowAnnouncer(message);
-
-        // Si tienes pausa en alg?n lado, esto evita que se congele la espera
         StartCoroutine(LoadSceneDelayed(sceneName, 2f));
     }
 
     IEnumerator LoadSceneDelayed(string sceneName, float delay)
     {
-        // Realtime para que funcione aunque Time.timeScale = 0
         yield return new WaitForSecondsRealtime(delay);
-
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
-
         SceneManager.LoadScene(sceneName);
     }
 
@@ -107,12 +128,6 @@ public class GameManager : MonoBehaviour
         if (goalAnnouncerText == null) return;
         goalAnnouncerText.text = msg;
         goalAnnouncerText.gameObject.SetActive(true);
-    }
-
-    void Respawn()
-    {
-        if (spawnManager != null) spawnManager.RespawnAfterGoal();
-        else FindObjectOfType<RandomSpawnManager>()?.RespawnAfterGoal();
     }
 
     void UpdateUI()
