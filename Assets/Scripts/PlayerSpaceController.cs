@@ -14,19 +14,11 @@ public class PlayerSpaceController : MonoBehaviour
     public Transform sphereCenter;
     public float boundaryRadius = 23.5f;
 
-    [Header("Camera Setup")]
+    [Header("Camera")]
     public Camera mainCamera;
-    public FollowCamera followCamera;
-
-    [Header("Spawn")]
-    public float freezeDuration = 3f;
-
-    [Header("Push")]
-    public float pushDamping = 4f;
 
     private CharacterController controller;
-    public bool frozen = false;
-    private Vector3 externalVelocity = Vector3.zero;
+    private bool frozen = false;
 
     void Awake()
     {
@@ -35,54 +27,42 @@ public class PlayerSpaceController : MonoBehaviour
         if (sphereCenter == null)
             sphereCenter = GameObject.Find("SceneSphere")?.transform;
 
-        if (mainCamera != null)
-            mainCamera.transform.SetParent(null);
+        if (mainCamera == null)
+            mainCamera = Camera.main;
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
-    void OnEnable() { GameManager.OnGoalScored += OnGoalScored; }
-    void OnDisable() { GameManager.OnGoalScored -= OnGoalScored; }
-
-    void OnGoalScored()
-    {
-        externalVelocity = Vector3.zero;
-        frozen = true;
-        // RandomSpawnManager maneja el unfreeze
-    }
-
-    public void Unfreeze()
-    {
-        frozen = false;
-    }
-
-    public void ApplyPush(Vector3 force)
-    {
-        externalVelocity += force;
-    }
-
     void Update()
     {
+        if (frozen) return;
+
         HandleCursorToggle();
-        if (!frozen) HandleMovement();
+        HandleMovement();
     }
 
     void HandleCursorToggle()
     {
         if (Input.GetKeyDown(KeyCode.Escape))
         {
-            bool locked = Cursor.lockState == CursorLockMode.Locked;
-            Cursor.lockState = locked ? CursorLockMode.None : CursorLockMode.Locked;
-            Cursor.visible = !locked;
+            if (Cursor.lockState == CursorLockMode.Locked)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+            else
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
         }
     }
 
     void HandleMovement()
     {
-        if (mainCamera == null) return;
-
         float x = 0f, z = 0f, y = 0f;
+
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) x = -1f;
         if (Input.GetKey(KeyCode.D) || Input.GetKey(KeyCode.RightArrow)) x = 1f;
         if (Input.GetKey(KeyCode.W) || Input.GetKey(KeyCode.UpArrow)) z = 1f;
@@ -90,28 +70,26 @@ public class PlayerSpaceController : MonoBehaviour
         if (Input.GetKey(KeyCode.E)) y = 1f;
         if (Input.GetKey(KeyCode.Q)) y = -1f;
 
-        Vector3 move = mainCamera.transform.right * x
-                     + mainCamera.transform.forward * z
-                     + mainCamera.transform.up * y;
+        Vector3 camForward = mainCamera != null ? mainCamera.transform.forward : transform.forward;
+        Vector3 camRight = mainCamera != null ? mainCamera.transform.right : transform.right;
+        Vector3 camUp = mainCamera != null ? mainCamera.transform.up : transform.up;
 
+        Vector3 move = camRight * x + camForward * z + camUp * y;
         if (move.sqrMagnitude > 1f) move.Normalize();
 
-        if (move.sqrMagnitude > 0.001f)
+        if (move.sqrMagnitude > 0.01f)
             transform.rotation = Quaternion.Slerp(
                 transform.rotation,
                 Quaternion.LookRotation(move),
                 10f * Time.deltaTime);
 
         controller.Move(move * speed * Time.deltaTime);
-
-        if (externalVelocity.sqrMagnitude > 0.01f)
-        {
-            controller.Move(externalVelocity * Time.deltaTime);
-            externalVelocity = Vector3.Lerp(externalVelocity, Vector3.zero, pushDamping * Time.deltaTime);
-        }
     }
 
-    void LateUpdate() { EnforceBoundary(); }
+    void LateUpdate()
+    {
+        EnforceBoundary();
+    }
 
     void EnforceBoundary()
     {
@@ -120,4 +98,12 @@ public class PlayerSpaceController : MonoBehaviour
         if (offset.magnitude > boundaryRadius)
             transform.position = sphereCenter.position + offset.normalized * boundaryRadius;
     }
+
+    public void ApplyPush(Vector3 force)
+    {
+        controller.Move(force * Time.deltaTime);
+    }
+
+    public void Freeze() { frozen = true; }
+    public void Unfreeze() { frozen = false; }
 }

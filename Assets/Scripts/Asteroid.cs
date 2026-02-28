@@ -1,36 +1,34 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
 public class Asteroid : MonoBehaviour
 {
-    [Header("Movimiento inicial")]
+    [Header("Initial Movement")]
     public float initialSpeedMin = 2f;
     public float initialSpeedMax = 6f;
     public float rotationSpeedMax = 90f;
 
-    [Header("Límite")]
+    [Header("Boundary")]
     public Transform sphereCenter;
     public float boundaryRadius = 24f;
 
-    [Header("Física")]
+    [Header("Physics")]
     public float bounceDamping = 0.85f;
 
-    private Rigidbody _rb;
+    private Rigidbody rb;
 
     void Start()
     {
-        _rb = GetComponent<Rigidbody>();
-        _rb.useGravity = false;
-        _rb.drag = 0f;
-        _rb.angularDrag = 0.1f;
+        rb = GetComponent<Rigidbody>();
+        rb.useGravity = false;
+        rb.drag = 0f;
+        rb.angularDrag = 0.1f;
 
         if (sphereCenter == null)
             sphereCenter = GameObject.Find("SceneSphere")?.transform;
 
-        _rb.velocity = Random.onUnitSphere * Random.Range(initialSpeedMin, initialSpeedMax);
-        _rb.angularVelocity = Random.insideUnitSphere * rotationSpeedMax * Mathf.Deg2Rad;
+        rb.velocity = Random.onUnitSphere * Random.Range(initialSpeedMin, initialSpeedMax);
+        rb.angularVelocity = Random.insideUnitSphere * rotationSpeedMax * Mathf.Deg2Rad;
     }
 
     void FixedUpdate()
@@ -40,25 +38,16 @@ public class Asteroid : MonoBehaviour
 
     void EnforceBoundary()
     {
+        if (sphereCenter == null) return;
+
         Vector3 fromCenter = transform.position - sphereCenter.position;
         float dist = fromCenter.magnitude;
 
         if (dist >= boundaryRadius)
         {
             transform.position = sphereCenter.position + fromCenter.normalized * (boundaryRadius - 0.2f);
-
             Vector3 normal = -fromCenter.normalized;
-            _rb.velocity = Vector3.Reflect(_rb.velocity, normal) * bounceDamping;
-        }
-    }
-
-    void OnCollisionEnter(Collision col)
-    {
-        float impactForce = col.relativeVelocity.magnitude;
-
-        if (impactForce > 3f)
-        {
-            // Aquí puedes añadir: partículas, sonido, etc.
+            rb.velocity = Vector3.Reflect(rb.velocity, normal) * bounceDamping;
         }
     }
 }
