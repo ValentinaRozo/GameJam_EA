@@ -130,13 +130,21 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 618374790}
     m_Modifications:
+    - target: {fileID: 1401627713977040, guid: a7cae8d52b6014949a63437844620ffa, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 1547086158934668, guid: a7cae8d52b6014949a63437844620ffa, type: 3}
       propertyPath: m_Name
       value: EA05_Planets_Pluton_01b_Default
       objectReference: {fileID: 0}
+    - target: {fileID: 1547086158934668, guid: a7cae8d52b6014949a63437844620ffa, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 4140785408528596, guid: a7cae8d52b6014949a63437844620ffa, type: 3}
       propertyPath: m_RootOrder
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4140785408528596, guid: a7cae8d52b6014949a63437844620ffa, type: 3}
       propertyPath: m_LocalScale.x
@@ -190,9 +198,21 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 331090333063508099, guid: a7cae8d52b6014949a63437844620ffa, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 2692830136797998605, guid: a7cae8d52b6014949a63437844620ffa, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 6858707872466100837, guid: a7cae8d52b6014949a63437844620ffa, type: 3}
       propertyPath: m_Enabled
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8084843001061292181, guid: a7cae8d52b6014949a63437844620ffa, type: 3}
+      propertyPath: m_Layer
+      value: 6
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: a7cae8d52b6014949a63437844620ffa, type: 3}
@@ -245,22 +265,22 @@ MonoBehaviour:
   shootCooldown: 1.5
   dribbleForce: 3
   dribbleCooldown: 0.4
-  defendTriggerRadius: 12
+  defendTriggerRadius: 8
+  defendApproachThreshold: 0.2
   defendPushDistance: 2.5
-  pickupDetectRadius: 3
+  pickupDetectRadius: 4
   separationRadius: 2.5
   separationForce: 3
   contactPushRadius: 1.5
   contactPushForce: 10
   contactCooldown: 0.3
-  sphereCenter: {fileID: 1369431155}
-  boundaryRadius: 23
   planetLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 64
   avoidRadius: 3
-  pushDamping: 4
-  frozen: 0
+  pushDamping: 5
+  sphereCenter: {fileID: 1369431155}
+  boundaryRadius: 23
 --- !u!136 &70144314
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -575,7 +595,7 @@ GameObject:
   - component: {fileID: 618374786}
   - component: {fileID: 618374792}
   - component: {fileID: 618374793}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: PlanetB
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -712,6 +732,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ownerTeam: B
+  goalRadius: 3
 --- !u!1 &655841769
 GameObject:
   m_ObjectHideFlags: 0
@@ -897,6 +918,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ownerTeam: A
+  goalRadius: 3
 --- !u!135 &667893513
 SphereCollider:
   m_ObjectHideFlags: 0
@@ -1297,12 +1319,16 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: e639aa2c0adc5f34e876673917b59031, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  goalsToEnd: 3
+  maxScore: 5
+  scoreA: 0
+  scoreB: 0
+  scoreTextA: {fileID: 0}
+  scoreTextB: {fileID: 0}
+  goalAnnouncerText: {fileID: 0}
   winScene: Win
   gameOverScene: GameOver
-  freezeDuration: 3
-  ballSpawn: {fileID: 0}
-  ball: {fileID: 0}
+  spawnManager: {fileID: 0}
+  gameEnded: 0
 --- !u!4 &863851155 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4627574288166193319, guid: 7e63047e14b39bc49b4d8a5a7d39e467, type: 3}
@@ -1718,13 +1744,21 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1968282576}
     m_Modifications:
+    - target: {fileID: 1116329325295186, guid: 88fbb209caf420445842095fdc20d63c, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 1364001922356752, guid: 88fbb209caf420445842095fdc20d63c, type: 3}
       propertyPath: m_Name
       value: EA05_Planets_Earth_01b_Default
       objectReference: {fileID: 0}
+    - target: {fileID: 1364001922356752, guid: 88fbb209caf420445842095fdc20d63c, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     - target: {fileID: 4450022944903710, guid: 88fbb209caf420445842095fdc20d63c, type: 3}
       propertyPath: m_RootOrder
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 4450022944903710, guid: 88fbb209caf420445842095fdc20d63c, type: 3}
       propertyPath: m_LocalScale.x
@@ -1778,6 +1812,18 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2488129420934827284, guid: 88fbb209caf420445842095fdc20d63c, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 7018917290977002352, guid: 88fbb209caf420445842095fdc20d63c, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
+    - target: {fileID: 8222692400115709596, guid: 88fbb209caf420445842095fdc20d63c, type: 3}
+      propertyPath: m_Layer
+      value: 6
+      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 88fbb209caf420445842095fdc20d63c, type: 3}
 --- !u!4 &1211131879 stripped
@@ -1792,9 +1838,17 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 667893516}
     m_Modifications:
+    - target: {fileID: 1653908637745558, guid: 3df3664da57f11e499cce3799496e311, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 1765932194190166, guid: 3df3664da57f11e499cce3799496e311, type: 3}
       propertyPath: m_Name
       value: EA05_Planets_Mars_01b_Default
+      objectReference: {fileID: 0}
+    - target: {fileID: 1765932194190166, guid: 3df3664da57f11e499cce3799496e311, type: 3}
+      propertyPath: m_Layer
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 4865897764902582, guid: 3df3664da57f11e499cce3799496e311, type: 3}
       propertyPath: m_RootOrder
@@ -1850,6 +1904,18 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 4865897764902582, guid: 3df3664da57f11e499cce3799496e311, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 2971045894552735155, guid: 3df3664da57f11e499cce3799496e311, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5777617037372020273, guid: 3df3664da57f11e499cce3799496e311, type: 3}
+      propertyPath: m_Layer
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 7118072353240655068, guid: 3df3664da57f11e499cce3799496e311, type: 3}
+      propertyPath: m_Layer
       value: 0
       objectReference: {fileID: 0}
     m_RemovedComponents: []
@@ -2330,9 +2396,12 @@ MonoBehaviour:
   asteroidPrefab: {fileID: 13507958783302758, guid: 9857ee729c31f364b9eb4d994da82dda, type: 3}
   asteroidCount: 24
   spawnRadius: 25
-  sphereCenter: {fileID: 1369431155}
   minScale: 0.5
   maxScale: 2
+  initialSpeedMin: 2
+  initialSpeedMax: 6
+  sphereCenter: {fileID: 1369431155}
+  boundaryRadius: 24
 --- !u!4 &1658491135
 Transform:
   m_ObjectHideFlags: 0
@@ -2400,9 +2469,9 @@ MonoBehaviour:
   raquetaPrefab: {fileID: 674963109}
   batePrefab: {fileID: 968583274}
   balonBasketPrefab: {fileID: 655841769}
-  spawnInterval: 6
-  spawnRadius: 18
-  maxActive: 5
+  spawnInterval: 5
+  spawnRadius: 15
+  maxActive: 6
   sphereCenter: {fileID: 1369431155}
 --- !u!4 &1662555848
 Transform:
@@ -2532,22 +2601,22 @@ MonoBehaviour:
   shootCooldown: 1.5
   dribbleForce: 3
   dribbleCooldown: 0.4
-  defendTriggerRadius: 10
+  defendTriggerRadius: 8
+  defendApproachThreshold: 0.2
   defendPushDistance: 2.5
-  pickupDetectRadius: 3
+  pickupDetectRadius: 4
   separationRadius: 2.5
   separationForce: 3
   contactPushRadius: 1.5
   contactPushForce: 10
   contactCooldown: 0.3
-  sphereCenter: {fileID: 1369431155}
-  boundaryRadius: 23
   planetLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 0
   avoidRadius: 3
-  pushDamping: 4
-  frozen: 0
+  pushDamping: 5
+  sphereCenter: {fileID: 1369431155}
+  boundaryRadius: 23
 --- !u!136 &1740080477
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -2750,22 +2819,22 @@ MonoBehaviour:
   shootCooldown: 1.5
   dribbleForce: 3
   dribbleCooldown: 0.4
-  defendTriggerRadius: 12
-  defendPushDistance: 3
-  pickupDetectRadius: 3
+  defendTriggerRadius: 8
+  defendApproachThreshold: 0.2
+  defendPushDistance: 2.5
+  pickupDetectRadius: 4
   separationRadius: 2.5
   separationForce: 3
   contactPushRadius: 1.5
   contactPushForce: 10
   contactCooldown: 0.3
-  sphereCenter: {fileID: 1369431155}
-  boundaryRadius: 23
   planetLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 0
   avoidRadius: 3
-  pushDamping: 4
-  frozen: 0
+  pushDamping: 5
+  sphereCenter: {fileID: 1369431155}
+  boundaryRadius: 23
 --- !u!136 &1807589896
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -2951,10 +3020,6 @@ MonoBehaviour:
   sphereCenter: {fileID: 1369431155}
   boundaryRadius: 23.5
   mainCamera: {fileID: 963194227}
-  followCamera: {fileID: 963194229}
-  freezeDuration: 3
-  pushDamping: 4
-  frozen: 0
 --- !u!143 &1818923324
 CharacterController:
   m_ObjectHideFlags: 0
@@ -3248,7 +3313,7 @@ GameObject:
   - component: {fileID: 1968282572}
   - component: {fileID: 1968282578}
   - component: {fileID: 1968282579}
-  m_Layer: 0
+  m_Layer: 6
   m_Name: PlanetA
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -3385,6 +3450,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ownerTeam: A
+  goalRadius: 3
 --- !u!1 &2036711048 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1547086158934668, guid: a7cae8d52b6014949a63437844620ffa, type: 3}
