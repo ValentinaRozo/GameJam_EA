@@ -5,6 +5,7 @@ public class PlayerSpaceController : MonoBehaviour
 {
     [Header("Movement")]
     public float speed = 8f;
+    public float pushMultiplier = 1f;
 
     [Header("Team")]
     [Tooltip("Team identifier: A or B")]
@@ -18,11 +19,15 @@ public class PlayerSpaceController : MonoBehaviour
     public Camera mainCamera;
 
     [Header("Audio")]
-    public AudioSource shipAudio;                // <- arrastra aquí tu AudioSource
-    public float minVelocityToPlay = 0.05f;      // umbral para considerarlo “movimiento”
+    public AudioSource shipAudio;
+    public float minVelocityToPlay = 0.05f;
+
+    [Header("Push Settings")]
+    public float pushDamping = 8f; // Qué tan rápido se desvanece el empujón
 
     private CharacterController controller;
     private bool frozen = false;
+    private Vector3 externalForce = Vector3.zero; // Acumula empujones externos
 
     void Awake()
     {
@@ -34,7 +39,6 @@ public class PlayerSpaceController : MonoBehaviour
         if (mainCamera == null)
             mainCamera = Camera.main;
 
-        // Si no lo asignas, intenta agarrarlo del mismo GameObject
         if (shipAudio == null)
             shipAudio = GetComponent<AudioSource>();
 
@@ -52,6 +56,14 @@ public class PlayerSpaceController : MonoBehaviour
 
         HandleCursorToggle();
         HandleMovement();
+
+        // Aplicar empujones externos acumulados
+        if (externalForce.sqrMagnitude > 0.01f)
+        {
+            controller.Move(externalForce * Time.deltaTime);
+            // Reducir gradualmente la fuerza
+            externalForce = Vector3.Lerp(externalForce, Vector3.zero, pushDamping * Time.deltaTime);
+        }
 
         // CharacterController.velocity es la velocidad real resultante
         bool isMoving = controller.velocity.sqrMagnitude > (minVelocityToPlay * minVelocityToPlay);
@@ -117,7 +129,8 @@ public class PlayerSpaceController : MonoBehaviour
 
     public void ApplyPush(Vector3 force)
     {
-        controller.Move(force * Time.deltaTime);
+        // Acumula la fuerza en lugar de aplicarla inmediatamente
+        externalForce += force;
     }
 
     void UpdateMovementAudio(bool shouldPlay)
@@ -130,7 +143,7 @@ public class PlayerSpaceController : MonoBehaviour
         }
         else
         {
-            if (shipAudio.isPlaying) shipAudio.Pause(); // o Stop() si prefieres reiniciar siempre
+            if (shipAudio.isPlaying) shipAudio.Pause();
         }
     }
 

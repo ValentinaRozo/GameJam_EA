@@ -24,6 +24,8 @@ public class PlayerPushBall : MonoBehaviour
             ball.RegisterTouch(playerController.teamID);
 
         Vector3 pushDir = new Vector3(hit.moveDirection.x, 0f, hit.moveDirection.z).normalized;
-        rb.AddForce(pushDir * pushForce, ForceMode.Impulse);
+
+        float finalForce = pushForce * (playerController != null ? playerController.pushMultiplier : 1f);
+        rb.AddForce(pushDir * finalForce, ForceMode.Impulse);
     }
 }

@@ -17,6 +17,9 @@ public class PlayerPass : MonoBehaviour
 
     void Update()
     {
+        // Dash toma prioridad sobre el pase cuando está activo
+        if (GetComponent<PlayerDashEffect>() != null) return;
+
         if (Input.GetKeyDown(KeyCode.Space))
             TryPassToTeammate();
     }

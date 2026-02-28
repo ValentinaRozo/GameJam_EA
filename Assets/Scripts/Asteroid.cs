@@ -16,6 +16,9 @@ public class Asteroid : MonoBehaviour
     public float bounceDamping = 0.85f;
 
     private Rigidbody rb;
+    private Vector3 originalScale;
+    private float originalSpeedMin, originalSpeedMax;
+    private bool caosActive = false;
 
     void Start()
     {
@@ -27,14 +30,15 @@ public class Asteroid : MonoBehaviour
         if (sphereCenter == null)
             sphereCenter = GameObject.Find("SceneSphere")?.transform;
 
+        originalScale = transform.localScale;
+        originalSpeedMin = initialSpeedMin;
+        originalSpeedMax = initialSpeedMax;
+
         rb.velocity = Random.onUnitSphere * Random.Range(initialSpeedMin, initialSpeedMax);
         rb.angularVelocity = Random.insideUnitSphere * rotationSpeedMax * Mathf.Deg2Rad;
     }
 
-    void FixedUpdate()
-    {
-        EnforceBoundary();
-    }
+    void FixedUpdate() { EnforceBoundary(); }
 
     void EnforceBoundary()
     {
@@ -49,5 +53,42 @@ public class Asteroid : MonoBehaviour
             Vector3 normal = -fromCenter.normalized;
             rb.velocity = Vector3.Reflect(rb.velocity, normal) * bounceDamping;
         }
+    }
+
+    // AsteroidCaos 
+
+    public void ApplyCaos(float scaleMultiplier, float speedMultiplier)
+    {
+        if (caosActive) return;
+        caosActive = true;
+
+        transform.localScale = originalScale * scaleMultiplier;
+
+        // Aplicar velocidad actual multiplicada
+        rb.velocity = rb.velocity.normalized *
+                      Mathf.Clamp(rb.velocity.magnitude * speedMultiplier,
+                                  initialSpeedMin * speedMultiplier,
+                                  initialSpeedMax * speedMultiplier);
+
+        // Guardar nuevos límites para EnforceBoundary
+        initialSpeedMin = originalSpeedMin * speedMultiplier;
+        initialSpeedMax = originalSpeedMax * speedMultiplier;
+
+        Debug.Log($"[Asteroid] Caos ON — scale x{scaleMultiplier}, speed x{speedMultiplier}");
+    }
+
+    public void RemoveCaos()
+    {
+        if (!caosActive) return;
+        caosActive = false;
+
+        transform.localScale = originalScale;
+        initialSpeedMin = originalSpeedMin;
+        initialSpeedMax = originalSpeedMax;
+
+        // Reducir velocidad al rango original
+        rb.velocity = rb.velocity.normalized * Random.Range(originalSpeedMin, originalSpeedMax);
+
+        Debug.Log("[Asteroid] Caos OFF");
     }
 }

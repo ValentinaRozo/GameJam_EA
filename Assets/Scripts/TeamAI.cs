@@ -27,9 +27,7 @@ public class TeamAI : MonoBehaviour
 
     [Header("Defense")]
     public float defendTriggerRadius = 8f;
-    [Tooltip("Qué tan directo debe ir el balón al planeta para activar defensa (0=cualquier dirección, 1=directo)")]
-    [Range(0f, 1f)]
-    public float defendApproachThreshold = 0.2f;
+    [Range(0f, 1f)] public float defendApproachThreshold = 0.2f;
     public float defendPushDistance = 2.5f;
 
     [Header("Pickup Seeking")]
@@ -45,7 +43,6 @@ public class TeamAI : MonoBehaviour
     public float contactCooldown = 0.3f;
 
     [Header("Obstacle Avoidance")]
-    [Tooltip("Layer de los planetas. Si no existe, dejar en Nothing")]
     public LayerMask planetLayer;
     public float avoidRadius = 3f;
 
@@ -67,20 +64,27 @@ public class TeamAI : MonoBehaviour
     private Vector3 externalVelocity = Vector3.zero;
     private Transform currentPickup = null;
 
+    private float baseMoveSpeed;
+    private float baseShootForce;
+    private float baseDribbleForce;
+    private float baseContactPushForce;
+
     private enum State { GoBall, CarryToPlanet, Shoot, Defend, SeekPickup }
     private State state = State.GoBall;
 
     // ─── Lifecycle ────────────────────────────────────────────────────────────
 
-    void OnEnable()
+    void Awake()
     {
-        if (!allAIs.Contains(this)) allAIs.Add(this);
+        // Guardar antes de que cualquier otro script los modifique
+        baseMoveSpeed = moveSpeed;
+        baseShootForce = shootForce;
+        baseDribbleForce = dribbleForce;
+        baseContactPushForce = contactPushForce;
     }
 
-    void OnDisable()
-    {
-        allAIs.Remove(this);
-    }
+    void OnEnable() { if (!allAIs.Contains(this)) allAIs.Add(this); }
+    void OnDisable() { allAIs.Remove(this); }
 
     void Start()
     {
@@ -101,10 +105,7 @@ public class TeamAI : MonoBehaviour
         {
             string name = teamID == "A" ? "PlanetA" : "PlanetB";
             GameObject go = GameObject.Find(name);
-            if (go != null)
-            {
-                ownPlanet = go.transform;
-            }
+            if (go != null) ownPlanet = go.transform;
             else
             {
                 PlanetGoal[] planets = FindObjectsOfType<PlanetGoal>();
@@ -116,7 +117,7 @@ public class TeamAI : MonoBehaviour
         frozen = false;
     }
 
-    // ─── Control de freeze ────────────────────────────────────────────────────
+    // ─── Freeze ───────────────────────────────────────────────────────────────
 
     public void Freeze()
     {
@@ -127,8 +128,37 @@ public class TeamAI : MonoBehaviour
     }
 
     public void Unfreeze() { frozen = false; }
-
     public void ApplyPush(Vector3 force) { externalVelocity += force; }
+
+    // ─── Field Effects ────────────────────────────────────────────────────────
+
+    public void EnableDash()
+    {
+        moveSpeed = baseMoveSpeed * 1.5f;
+        contactPushForce = baseContactPushForce * 1.5f;
+        Debug.Log($"[TeamAI] Dash ON — speed: {moveSpeed}");
+    }
+
+    public void DisableDash()
+    {
+        moveSpeed = baseMoveSpeed;
+        contactPushForce = baseContactPushForce;
+        Debug.Log("[TeamAI] Dash OFF");
+    }
+
+    public void EnableHeavyBall()
+    {
+        shootForce = baseShootForce * 2f;
+        dribbleForce = baseDribbleForce * 2f;
+        Debug.Log($"[TeamAI] HeavyBall ON — shoot: {shootForce}");
+    }
+
+    public void DisableHeavyBall()
+    {
+        shootForce = baseShootForce;
+        dribbleForce = baseDribbleForce;
+        Debug.Log("[TeamAI] HeavyBall OFF");
+    }
 
     // ─── Update ───────────────────────────────────────────────────────────────
 
@@ -186,23 +216,18 @@ public class TeamAI : MonoBehaviour
 
             case State.CarryToPlanet:
                 if (dBall > grabBallDistance * 3f) { state = State.GoBall; break; }
-
                 MoveTo(targetPlanet.position, shootDistance);
-
                 if (dBall <= grabBallDistance && dribbleTimer <= 0f)
                 {
                     ball.RegisterTouch(teamID);
                     ball.Impulse((targetPlanet.position - ball.transform.position).normalized, dribbleForce);
                     dribbleTimer = dribbleCooldown;
                 }
-
-                if (dPlanet <= shootDistance && shootTimer <= 0f)
-                    state = State.Shoot;
+                if (dPlanet <= shootDistance && shootTimer <= 0f) state = State.Shoot;
                 break;
 
             case State.Shoot:
                 if (dBall > grabBallDistance * 3f) { state = State.GoBall; break; }
-
                 ball.RegisterTouch(teamID);
                 ball.Impulse(targetPlanet.position - ball.transform.position, shootForce);
                 shootTimer = shootCooldown;
@@ -228,11 +253,8 @@ public class TeamAI : MonoBehaviour
     bool BallThreateningOwnPlanet()
     {
         if (ownPlanet == null || ball == null || ball.rb == null) return false;
-
         float dist = Vector3.Distance(ball.transform.position, ownPlanet.position);
         if (dist >= defendTriggerRadius) return false;
-
-        // Solo defender si el balón se acerca activamente al planeta
         Vector3 toPlanet = (ownPlanet.position - ball.transform.position).normalized;
         float approachDot = Vector3.Dot(ball.rb.velocity.normalized, toPlanet);
         return approachDot > defendApproachThreshold;
@@ -241,11 +263,9 @@ public class TeamAI : MonoBehaviour
     void Defend(float dBall)
     {
         if (ownPlanet == null) return;
-
         Vector3 interceptPos = ball.transform.position +
             (ownPlanet.position - ball.transform.position).normalized * defendPushDistance * 0.5f;
         MoveTo(interceptPos, defendPushDistance);
-
         if (dBall <= defendPushDistance && shootTimer <= 0f)
         {
             ball.RegisterTouch(teamID);
@@ -262,7 +282,6 @@ public class TeamAI : MonoBehaviour
         Collider[] cols = Physics.OverlapSphere(transform.position, pickupDetectRadius);
         Transform nearest = null;
         float nearestDist = pickupDetectRadius;
-
         foreach (var col in cols)
         {
             if (col.GetComponent<PowerUpPickup>() == null) continue;
@@ -278,11 +297,9 @@ public class TeamAI : MonoBehaviour
     {
         contactTimer = contactCooldown;
         Collider[] hits = Physics.OverlapSphere(transform.position, contactPushRadius);
-
         foreach (var col in hits)
         {
             if (col.gameObject == gameObject) continue;
-
             Vector3 dir = (col.transform.position - transform.position).normalized;
             if (dir == Vector3.zero) dir = Random.onUnitSphere;
 
@@ -306,7 +323,6 @@ public class TeamAI : MonoBehaviour
         Vector3 baseDir = to.normalized;
         Vector3 dir = baseDir;
 
-        // Evasión de planetas — solo si planetLayer está configurado
         if (planetLayer.value != 0)
         {
             Collider[] obstacles = Physics.OverlapSphere(transform.position, avoidRadius, planetLayer);
@@ -317,7 +333,6 @@ public class TeamAI : MonoBehaviour
             }
         }
 
-        // Separación entre agentes
         foreach (var other in allAIs)
         {
             if (other == this) continue;
@@ -326,9 +341,7 @@ public class TeamAI : MonoBehaviour
                 dir += (transform.position - other.transform.position).normalized * (separationForce / d);
         }
 
-        // Si las fuerzas se cancelan, ir directo al objetivo
         dir = dir.sqrMagnitude > 0.001f ? dir.normalized : baseDir;
-
         transform.position += dir * moveSpeed * Time.deltaTime;
 
         if (dir != Vector3.zero)
