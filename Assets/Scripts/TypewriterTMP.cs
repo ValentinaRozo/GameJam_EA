@@ -1,6 +1,7 @@
 using System.Collections;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class TypewriterTMP : MonoBehaviour
 {
@@ -16,19 +17,26 @@ public class TypewriterTMP : MonoBehaviour
     public float charDelay = 0.03f;
 
     [Header("Audio")]
-    public AudioSource typingAudio;     // Audio 1 (se destruye)
-    public AudioSource continueAudio;   // Audio 2
+    public AudioSource typingAudio;
+    public AudioSource continueAudio;
 
+    [Header("Control")]
     public KeyCode advanceKey = KeyCode.Return;
+
+    [Header("Escena")]
+    public string sceneToLoad; // 👈 Nombre de tu escena de juego
 
     int pageIndex = 0;
     bool isTyping = false;
     bool pageFinished = false;
+    bool isLastPage = false;
     Coroutine typingCoroutine;
 
     void Start()
     {
-        if (continueText != null) continueText.gameObject.SetActive(false);
+        if (continueText != null)
+            continueText.gameObject.SetActive(false);
+
         ShowPage(pageIndex);
     }
 
@@ -36,19 +44,26 @@ public class TypewriterTMP : MonoBehaviour
     {
         if (!Input.GetKeyDown(advanceKey)) return;
 
-        // Si está escribiendo → completar texto
         if (isTyping)
         {
             SkipTyping();
             return;
         }
 
-        // Si ya terminó → destruir audio1, sonar audio2 y cambiar texto
         if (pageFinished)
         {
-            DestroyTypingAudio();   // 🔥 destruye AudioSource 1
-            PlayContinueAudio();    // ▶ reproduce AudioSource 2
-            NextPageImmediate();    // ➜ cambia texto
+            DestroyTypingAudio();
+            PlayContinueAudio();
+
+            // 🔥 Si es la última página → iniciar juego
+            if (isLastPage)
+            {
+                StartGame();
+            }
+            else
+            {
+                NextPageImmediate();
+            }
         }
     }
 
@@ -56,6 +71,8 @@ public class TypewriterTMP : MonoBehaviour
     {
         if (typingCoroutine != null)
             StopCoroutine(typingCoroutine);
+
+        isLastPage = (index == pages.Length - 1);
 
         typingCoroutine = StartCoroutine(TypeText(pages[index]));
     }
@@ -65,7 +82,9 @@ public class TypewriterTMP : MonoBehaviour
         isTyping = true;
         pageFinished = false;
 
-        if (continueText != null) continueText.gameObject.SetActive(false);
+        if (continueText != null)
+            continueText.gameObject.SetActive(false);
+
         textTMP.text = "";
 
         if (typingAudio != null)
@@ -98,7 +117,15 @@ public class TypewriterTMP : MonoBehaviour
         pageFinished = true;
 
         if (continueText != null)
+        {
             continueText.gameObject.SetActive(true);
+
+            // 🔥 Cambiar texto según si es la última página
+            if (isLastPage)
+                continueText.text = "Press Enter to Start Game";
+            else
+                continueText.text = "Press Enter to Continue";
+        }
     }
 
     void NextPageImmediate()
@@ -109,9 +136,13 @@ public class TypewriterTMP : MonoBehaviour
         {
             ShowPage(pageIndex);
         }
-        else
+    }
+
+    void StartGame()
+    {
+        if (!string.IsNullOrEmpty(sceneToLoad))
         {
-            gameObject.SetActive(false);
+            SceneManager.LoadScene(sceneToLoad);
         }
     }
 
@@ -119,7 +150,7 @@ public class TypewriterTMP : MonoBehaviour
     {
         if (typingAudio != null)
         {
-            Destroy(typingAudio); // 💥 destruye el componente AudioSource
+            Destroy(typingAudio);
             typingAudio = null;
         }
     }

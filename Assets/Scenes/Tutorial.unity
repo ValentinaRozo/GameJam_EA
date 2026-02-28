@@ -1957,6 +1957,7 @@ MonoBehaviour:
   typingAudio: {fileID: 519612642}
   continueAudio: {fileID: 1087935116}
   advanceKey: 13
+  sceneToLoad: EscenaPrincipal
 --- !u!1 &1985957315
 GameObject:
   m_ObjectHideFlags: 0
