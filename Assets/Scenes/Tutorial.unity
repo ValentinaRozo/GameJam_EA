@@ -328,10 +328,6 @@ MonoBehaviour:
   sphereCenter: {fileID: 0}
   boundaryRadius: 23.5
   mainCamera: {fileID: 451442761}
-  followCamera: {fileID: 0}
-  freezeDuration: 3
-  pushDamping: 4
-  frozen: 0
 --- !u!143 &347314346
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1320,7 +1316,7 @@ AudioSource:
   m_Enabled: 1
   serializedVersion: 4
   OutputAudioMixerGroup: {fileID: 0}
-  m_audioClip: {fileID: 8300000, guid: 73067d9c50c3e4849a729479a72d1e68, type: 3}
+  m_audioClip: {fileID: 8300000, guid: 148ce6807d17e42938ca40a4e6d45fa8, type: 3}
   m_PlayOnAwake: 0
   m_Volume: 1
   m_Pitch: 1
@@ -1950,10 +1946,10 @@ MonoBehaviour:
     Are you ready to dominate the galaxy?'
   - 'Use the Arrow Keys or WASD to move your ship.
 
-    Press Q to move up.
+    Press Q to move down.
 
     Press
-    E to move down.
+    E to move up.
 
 
     Time to start the game!'
