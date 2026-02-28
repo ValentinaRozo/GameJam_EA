@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
@@ -28,12 +29,28 @@ public class GameManager : MonoBehaviour
 
     void Awake()
     {
-        if (Instance == null) Instance = this;
-        else Destroy(gameObject);
+        if (Instance == null)
+        {
+            Instance = this;
+            DontDestroyOnLoad(gameObject);
+        }
+        else
+        {
+            Destroy(gameObject);
+        }
     }
 
-    public void TeamAScored() { scoreA++; RegisterGoal(); }
-    public void TeamBScored() { scoreB++; RegisterGoal(); }
+    public void TeamAScored()
+    {
+        scoreA++;
+        RegisterGoal();
+    }
+
+    public void TeamBScored()
+    {
+        scoreB++;
+        RegisterGoal();
+    }
 
     void RegisterGoal()
     {
@@ -41,9 +58,14 @@ public class GameManager : MonoBehaviour
         totalGoals++;
 
         ResetBall();
-        OnGoalScored?.Invoke();  // Notifica a jugador y AIs
+        OnGoalScored?.Invoke();  // Notifica jugador, AI y freeze
 
-        Debug.Log($"Gol #{totalGoals} | A:{scoreA} - B:{scoreB}");
+        // Respawn aleatorio en borde de esfera
+        RandomSpawnManager spawner = FindObjectOfType<RandomSpawnManager>();
+        if (spawner != null)
+            spawner.RespawnAfterGoal();
+
+        Debug.Log($"Gol #{totalGoals} | Equipo A: {scoreA} - Equipo B: {scoreB}");
 
         if (totalGoals >= goalsToEnd)
         {
@@ -55,15 +77,30 @@ public class GameManager : MonoBehaviour
     void ResetBall()
     {
         if (ball == null || ballSpawn == null) return;
+
         Rigidbody rb = ball.GetComponent<Rigidbody>();
-        if (rb != null) { rb.velocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
+        if (rb != null)
+        {
+            rb.velocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
         ball.transform.position = ballSpawn.position;
         ball.lastToucherTeam = "";
     }
 
-    System.Collections.IEnumerator LoadEndScene()
+    IEnumerator LoadEndScene()
     {
         yield return new WaitForSeconds(freezeDuration);
-        SceneManager.LoadScene(scoreA >= scoreB ? winScene : gameOverScene);
+        string endScene = scoreA >= scoreB ? winScene : gameOverScene;
+        Debug.Log($"Juego terminado. Cargando {endScene}");
+        SceneManager.LoadScene(endScene);
     }
+
+    // Para debug — llamar desde botón en escena
+    [ContextMenu("Test Goal A")]
+    void TestGoalA() { TeamAScored(); }
+
+    [ContextMenu("Test Goal B")]
+    void TestGoalB() { TeamBScored(); }
 }

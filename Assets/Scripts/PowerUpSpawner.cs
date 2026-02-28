@@ -16,37 +16,81 @@ public class PowerUpSpawner : MonoBehaviour
     public Transform sphereCenter;
 
     private List<GameObject> active = new List<GameObject>();
+    private Queue<GameObject> spawnQueue = new Queue<GameObject>();
 
     void Start()
     {
         if (sphereCenter == null)
             sphereCenter = GameObject.Find("SceneSphere")?.transform;
+
+        RebuildQueue();
         StartCoroutine(SpawnLoop());
+    }
+
+    void RebuildQueue()
+    {
+        List<GameObject> prefabs = new List<GameObject>();
+        if (raquetaPrefab != null) prefabs.Add(raquetaPrefab);
+        if (batePrefab != null) prefabs.Add(batePrefab);
+        if (balonBasketPrefab != null) prefabs.Add(balonBasketPrefab);
+
+        // Shuffle
+        for (int i = 0; i < prefabs.Count; i++)
+        {
+            int rand = Random.Range(i, prefabs.Count);
+            (prefabs[i], prefabs[rand]) = (prefabs[rand], prefabs[i]);
+        }
+
+        spawnQueue.Clear();
+        foreach (var p in prefabs) spawnQueue.Enqueue(p);
+
+        Debug.Log($"[PowerUpSpawner] Cola reconstruida con {spawnQueue.Count} prefabs");
     }
 
     IEnumerator SpawnLoop()
     {
+        yield return new WaitForSeconds(2f);
+
         while (true)
         {
+            Cleanup();
+            if (active.Count < maxActive)
+                SpawnNext();
+
             yield return new WaitForSeconds(spawnInterval);
-            active.RemoveAll(p => p == null);
-            if (active.Count < maxActive) SpawnRandom();
         }
     }
 
-    void SpawnRandom()
+    void SpawnNext()
     {
-        GameObject[] pool = { raquetaPrefab, batePrefab, balonBasketPrefab };
-        // Filtrar nulos
-        List<GameObject> valid = new List<GameObject>();
-        foreach (var p in pool) if (p != null) valid.Add(p);
-        if (valid.Count == 0) return;
+        // Reconstruir si está vacía
+        if (spawnQueue.Count == 0) RebuildQueue();
+
+        if (spawnQueue.Count == 0)
+        {
+            Debug.LogWarning("[PowerUpSpawner] No hay prefabs asignados.");
+            return;
+        }
+
+        GameObject prefab = spawnQueue.Dequeue();
+
+        if (prefab == null)
+        {
+            SpawnNext(); // intentar con el siguiente
+            return;
+        }
 
         Vector3 center = sphereCenter ? sphereCenter.position : Vector3.zero;
-        Vector3 pos = center + Random.insideUnitSphere.normalized
-                         * Random.Range(spawnRadius * 0.3f, spawnRadius);
+        Vector3 pos = center + Random.onUnitSphere * Random.Range(spawnRadius * 0.4f, spawnRadius);
 
-        GameObject obj = Instantiate(valid[Random.Range(0, valid.Count)], pos, Random.rotation);
+        GameObject obj = Instantiate(prefab, pos, Random.rotation);
         active.Add(obj);
+
+        Debug.Log($"[PowerUpSpawner] {prefab.name} | Activos: {active.Count}/{maxActive}");
+    }
+
+    void Cleanup()
+    {
+        active.RemoveAll(p => p == null);
     }
 }
