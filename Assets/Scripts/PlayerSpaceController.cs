@@ -17,6 +17,10 @@ public class PlayerSpaceController : MonoBehaviour
     [Header("Camera")]
     public Camera mainCamera;
 
+    [Header("Audio")]
+    public AudioSource shipAudio;                // <- arrastra aquí tu AudioSource
+    public float minVelocityToPlay = 0.05f;      // umbral para considerarlo “movimiento”
+
     private CharacterController controller;
     private bool frozen = false;
 
@@ -30,16 +34,28 @@ public class PlayerSpaceController : MonoBehaviour
         if (mainCamera == null)
             mainCamera = Camera.main;
 
+        // Si no lo asignas, intenta agarrarlo del mismo GameObject
+        if (shipAudio == null)
+            shipAudio = GetComponent<AudioSource>();
+
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
     void Update()
     {
-        if (frozen) return;
+        if (frozen)
+        {
+            UpdateMovementAudio(false);
+            return;
+        }
 
         HandleCursorToggle();
         HandleMovement();
+
+        // CharacterController.velocity es la velocidad real resultante
+        bool isMoving = controller.velocity.sqrMagnitude > (minVelocityToPlay * minVelocityToPlay);
+        UpdateMovementAudio(isMoving);
     }
 
     void HandleCursorToggle()
@@ -102,6 +118,20 @@ public class PlayerSpaceController : MonoBehaviour
     public void ApplyPush(Vector3 force)
     {
         controller.Move(force * Time.deltaTime);
+    }
+
+    void UpdateMovementAudio(bool shouldPlay)
+    {
+        if (shipAudio == null) return;
+
+        if (shouldPlay)
+        {
+            if (!shipAudio.isPlaying) shipAudio.Play();
+        }
+        else
+        {
+            if (shipAudio.isPlaying) shipAudio.Pause(); // o Stop() si prefieres reiniciar siempre
+        }
     }
 
     public void Freeze() { frozen = true; }

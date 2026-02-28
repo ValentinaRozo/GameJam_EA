@@ -8,7 +8,7 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance;
 
     [Header("Score")]
-    public int maxScore = 2;
+    public int maxScore = 3; // <-- 3 goles
     public int scoreA = 0;
     public int scoreB = 0;
 
@@ -39,31 +39,22 @@ public class GameManager : MonoBehaviour
         scoreA = 0;
         scoreB = 0;
         UpdateUI();
+
         if (goalAnnouncerText != null)
             goalAnnouncerText.gameObject.SetActive(false);
-
-        // Log all scenes in Build Settings for verification
-        Debug.Log("[GM] Scenes in Build Settings:");
-        for (int i = 0; i < SceneManager.sceneCountInBuildSettings; i++)
-        {
-            string path = UnityEngine.SceneManagement.SceneUtility.GetScenePathByBuildIndex(i);
-            Debug.Log("[GM]   [" + i + "] " + path);
-        }
     }
 
     public void TeamAScored()
     {
-        if (gameEnded) { Debug.Log("[GM] TeamAScored ignored — gameEnded is true"); return; }
+        if (gameEnded) return;
+
         scoreA++;
-        Debug.Log("[GM] Team A scored -> " + scoreA + "/" + maxScore);
         UpdateUI();
         OnGoalScored?.Invoke();
 
         if (scoreA >= maxScore)
         {
-            gameEnded = true;
-            Debug.Log("[GM] Team A wins! Starting coroutine to load: " + winScene);
-            StartCoroutine(LoadSceneDelayed(winScene, 2f));
+            EndGameAndLoad(winScene, "You Win!");
         }
         else
         {
@@ -74,17 +65,15 @@ public class GameManager : MonoBehaviour
 
     public void TeamBScored()
     {
-        if (gameEnded) { Debug.Log("[GM] TeamBScored ignored — gameEnded is true"); return; }
+        if (gameEnded) return;
+
         scoreB++;
-        Debug.Log("[GM] Team B scored -> " + scoreB + "/" + maxScore);
         UpdateUI();
         OnGoalScored?.Invoke();
 
         if (scoreB >= maxScore)
         {
-            gameEnded = true;
-            Debug.Log("[GM] Team B wins! Starting coroutine to load: " + gameOverScene);
-            StartCoroutine(LoadSceneDelayed(gameOverScene, 2f));
+            EndGameAndLoad(gameOverScene, "Game Over!");
         }
         else
         {
@@ -93,30 +82,31 @@ public class GameManager : MonoBehaviour
         }
     }
 
+    void EndGameAndLoad(string sceneName, string message)
+    {
+        gameEnded = true;
+        SafeShowAnnouncer(message);
+
+        // Si tienes pausa en alg?n lado, esto evita que se congele la espera
+        StartCoroutine(LoadSceneDelayed(sceneName, 2f));
+    }
+
     IEnumerator LoadSceneDelayed(string sceneName, float delay)
     {
-        Debug.Log("[GM] Coroutine started — waiting " + delay + "s to load: " + sceneName);
-        SafeShowAnnouncer(scoreA >= maxScore ? "You Win!" : "Game Over!");
-        yield return new WaitForSeconds(delay);
-        Debug.Log("[GM] Delay finished — calling SceneManager.LoadScene(" + sceneName + ")");
+        // Realtime para que funcione aunque Time.timeScale = 0
+        yield return new WaitForSecondsRealtime(delay);
+
         Cursor.lockState = CursorLockMode.None;
         Cursor.visible = true;
+
         SceneManager.LoadScene(sceneName);
-        Debug.Log("[GM] LoadScene called — if you see this, the scene name is wrong or not in Build Settings");
     }
 
     void SafeShowAnnouncer(string msg)
     {
         if (goalAnnouncerText == null) return;
-        try
-        {
-            goalAnnouncerText.text = msg;
-            goalAnnouncerText.gameObject.SetActive(true);
-        }
-        catch (System.Exception e)
-        {
-            Debug.LogError("[GM] goalAnnouncerText error: " + e.Message);
-        }
+        goalAnnouncerText.text = msg;
+        goalAnnouncerText.gameObject.SetActive(true);
     }
 
     void Respawn()
