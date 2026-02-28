@@ -35,16 +35,18 @@ public class PowerUpSpawner : MonoBehaviour
         if (balonBasketPrefab != null) prefabs.Add(balonBasketPrefab);
 
         // Shuffle
-        for (int i = 0; i < prefabs.Count; i++)
+        for (int i = prefabs.Count - 1; i > 0; i--)
         {
-            int rand = Random.Range(i, prefabs.Count);
-            (prefabs[i], prefabs[rand]) = (prefabs[rand], prefabs[i]);
+            int rand = Random.Range(0, i + 1);
+            GameObject temp = prefabs[i];
+            prefabs[i] = prefabs[rand];
+            prefabs[rand] = temp;
         }
 
         spawnQueue.Clear();
         foreach (var p in prefabs) spawnQueue.Enqueue(p);
 
-        Debug.Log($"[PowerUpSpawner] Cola reconstruida con {spawnQueue.Count} prefabs");
+        Debug.Log($"[PowerUpSpawner] Cola: {spawnQueue.Count} prefabs");
     }
 
     IEnumerator SpawnLoop()
@@ -63,22 +65,15 @@ public class PowerUpSpawner : MonoBehaviour
 
     void SpawnNext()
     {
-        // Reconstruir si está vacía
         if (spawnQueue.Count == 0) RebuildQueue();
 
-        if (spawnQueue.Count == 0)
-        {
-            Debug.LogWarning("[PowerUpSpawner] No hay prefabs asignados.");
-            return;
-        }
+        // Sin prefabs asignados     salir silenciosamente
+        if (spawnQueue.Count == 0) return;
 
         GameObject prefab = spawnQueue.Dequeue();
 
-        if (prefab == null)
-        {
-            SpawnNext(); // intentar con el siguiente
-            return;
-        }
+        // Prefab null  saltar sin recursión
+        if (prefab == null) return;
 
         Vector3 center = sphereCenter ? sphereCenter.position : Vector3.zero;
         Vector3 pos = center + Random.onUnitSphere * Random.Range(spawnRadius * 0.4f, spawnRadius);
@@ -93,4 +88,12 @@ public class PowerUpSpawner : MonoBehaviour
     {
         active.RemoveAll(p => p == null);
     }
+
+    public void ResetSpawner()
+    {
+        // Limpiar lista de activos (ya destruidos por CleanupPowerUps)
+        active.Clear();
+        RebuildQueue();
+    }
+
 }

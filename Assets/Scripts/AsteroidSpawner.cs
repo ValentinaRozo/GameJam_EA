@@ -1,5 +1,3 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 
 public class AsteroidSpawner : MonoBehaviour
@@ -8,22 +6,31 @@ public class AsteroidSpawner : MonoBehaviour
     public GameObject asteroidPrefab;
 
     [Header("Spawn")]
-    public int asteroidCount = 30;
+    public int asteroidCount = 20;
     public float spawnRadius = 20f;
-    public Transform sphereCenter;
 
-    [Header("Tamaño variado")]
-    public float minScale = 0.3f;
+    [Header("Size")]
+    public float minScale = 0.4f;
     public float maxScale = 1.5f;
 
-    private AsteroidDifficultyManager diffManager;
+    [Header("Speed")]
+    public float initialSpeedMin = 2f;
+    public float initialSpeedMax = 6f;
+
+    [Header("Boundary")]
+    public Transform sphereCenter;
+    public float boundaryRadius = 24f;
 
     void Start()
     {
+        if (asteroidPrefab == null)
+        {
+            Debug.LogWarning("AsteroidSpawner: asteroidPrefab is not assigned.");
+            return;
+        }
+
         if (sphereCenter == null)
             sphereCenter = GameObject.Find("SceneSphere")?.transform;
-
-        diffManager = GetComponent<AsteroidDifficultyManager>();
 
         for (int i = 0; i < asteroidCount; i++)
             SpawnAsteroid();
@@ -31,28 +38,35 @@ public class AsteroidSpawner : MonoBehaviour
 
     void SpawnAsteroid()
     {
-        Vector3 spawnPos = sphereCenter.position + Random.insideUnitSphere * spawnRadius;
-        GameObject asteroid = Instantiate(asteroidPrefab, spawnPos, Random.rotation);
-        asteroid.tag = "Asteroid";
+        Vector3 spawnPos = (sphereCenter != null ? sphereCenter.position : Vector3.zero)
+                         + Random.insideUnitSphere * spawnRadius;
 
-        // Escala base aleatoria
-        float baseScale = Random.Range(minScale, maxScale);
-        asteroid.transform.localScale = Vector3.one * baseScale;
+        GameObject obj = Instantiate(asteroidPrefab, spawnPos, Random.rotation);
 
-        Rigidbody rb = asteroid.GetComponent<Rigidbody>();
+        // Random scale
+        float s = Random.Range(minScale, maxScale);
+        obj.transform.localScale = Vector3.one * s;
+
+        // Configure Rigidbody
+        Rigidbody rb = obj.GetComponent<Rigidbody>();
         if (rb != null)
         {
             rb.useGravity = false;
-            rb.mass = baseScale * baseScale;
+            rb.drag = 0f;
+            rb.angularDrag = 0.1f;
+            rb.mass = s * s;
+            rb.velocity = Random.onUnitSphere * Random.Range(initialSpeedMin, initialSpeedMax);
+            rb.angularVelocity = Random.insideUnitSphere * 90f * Mathf.Deg2Rad;
         }
 
-        // Asignar referencia al centro
-        Asteroid asteroidScript = asteroid.GetComponent<Asteroid>();
+        // Pass boundary reference to Asteroid script if present
+        Asteroid asteroidScript = obj.GetComponent<Asteroid>();
         if (asteroidScript != null)
+        {
             asteroidScript.sphereCenter = sphereCenter;
-
-        //  NUEVO: aplicar dificultad actual al nuevo asteroide
-        if (diffManager != null)
-            diffManager.InitAsteroid(asteroid, baseScale);
+            asteroidScript.boundaryRadius = boundaryRadius;
+            asteroidScript.initialSpeedMin = initialSpeedMin;
+            asteroidScript.initialSpeedMax = initialSpeedMax;
+        }
     }
 }
