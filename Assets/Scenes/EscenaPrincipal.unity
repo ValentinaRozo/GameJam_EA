@@ -135,7 +135,8 @@ GameObject:
   - component: {fileID: 70144316}
   - component: {fileID: 70144315}
   - component: {fileID: 70144314}
-  - component: {fileID: 70144313}
+  - component: {fileID: 70144319}
+  - component: {fileID: 70144318}
   m_Layer: 0
   m_Name: TeamMate
   m_TagString: Untagged
@@ -143,25 +144,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &70144313
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 70144312}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: c49f4e055d19249939129f6aab004e83, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  player: {fileID: 1818923320}
-  ball: {fileID: 1332214966}
-  moveSpeed: 5
-  grabBallDistance: 1.2
-  nearPlayerDistance: 2
-  passForce: 6
-  passCooldown: 1
 --- !u!136 &70144314
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -241,6 +223,44 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &70144318
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 70144312}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c49f4e055d19249939129f6aab004e83, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  player: {fileID: 1818923320}
+  ball: {fileID: 1332214971}
+  ballOwnership: {fileID: 1332214972}
+  speed: 6
+  stopDistanceToBall: 1.4
+  supportDistanceToPlayer: 3.5
+  passForce: 8
+  passCooldown: 1.2
+--- !u!143 &70144319
+CharacterController:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 70144312}
+  m_Material: {fileID: 0}
+  m_IsTrigger: 0
+  m_Enabled: 1
+  serializedVersion: 2
+  m_Height: 2
+  m_Radius: 0.5
+  m_SlopeLimit: 45
+  m_StepOffset: 0.3
+  m_SkinWidth: 0.08
+  m_MinMoveDistance: 0.001
+  m_Center: {x: 0, y: 0, z: 0}
 --- !u!1 &618374785
 GameObject:
   m_ObjectHideFlags: 0
@@ -678,6 +698,7 @@ GameObject:
   - component: {fileID: 1332214968}
   - component: {fileID: 1332214967}
   - component: {fileID: 1332214966}
+  - component: {fileID: 1332214972}
   m_Layer: 3
   m_Name: Ball
   m_TagString: Untagged
@@ -793,6 +814,20 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1332214972
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1332214965}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d00d0443f21e4302b546139084c75f9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  holder: {fileID: 1332214971}
+  holdDistance: 1.2
 --- !u!1 &1369431154
 GameObject:
   m_ObjectHideFlags: 0
@@ -1004,8 +1039,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 36bc3b92650f743be9fdcf3b898b25ef, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  ball: {fileID: 0}
-  teammate: {fileID: 0}
+  ball: {fileID: 1332214966}
+  teammate: {fileID: 70144317}
   passRange: 2
   passForce: 6
 --- !u!114 &1818923322
@@ -1037,6 +1072,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   speed: 6
+  cameraTransform: {fileID: 963194228}
+  ballTransform: {fileID: 1332214971}
+  ballOwnership: {fileID: 1332214972}
 --- !u!143 &1818923324
 CharacterController:
   m_ObjectHideFlags: 0

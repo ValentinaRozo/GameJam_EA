@@ -1,79 +1,119 @@
 using UnityEngine;
 
+[RequireComponent(typeof(CharacterController))]
 public class TeamAI : MonoBehaviour
 {
     public Transform player;
-    public BallPhysics ball;
+    public Transform ball;
+    public BallOwnership ballOwnership;
 
     [Header("Movimiento")]
-    public float moveSpeed = 5f;
-    public float grabBallDistance = 1.2f;     
-    public float nearPlayerDistance = 2.0f;  
+    public float speed = 6f;
+    public float stopDistanceToBall = 1.4f;
+    public float supportDistanceToPlayer = 3.5f;
 
-    [Header("Pase")]
-    public float passForce = 6f;
-    public float passCooldown = 1.0f;
+    [Header("Pase (empuje)")]
+    public float passForce = 8f;
+    public float passCooldown = 1.2f;
 
-    private float passTimer = 0f;
+    private CharacterController controller;
+    private float nextPassTime;
 
-    private enum State { GoBall, BringBallToPlayer, PassToPlayer }
-    private State state = State.GoBall;
+    private enum State { ChaseBall, SupportPlayer }
+    private State state;
+
+    void Awake()
+    {
+        controller = GetComponent<CharacterController>();
+    }
 
     void Update()
     {
-        if (player == null || ball == null) return;
+        if (player == null || ball == null || ballOwnership == null) return;
 
-        passTimer -= Time.deltaTime;
+        // --- Decidir estado ---
+        bool playerHasBall = ballOwnership.IsHeldBy(player);
+        bool iHaveBall = ballOwnership.IsHeldBy(transform);
 
-        float dBall = Vector3.Distance(transform.position, ball.transform.position);
-        float dPlayer = Vector3.Distance(transform.position, player.position);
+        if (playerHasBall)
+            state = State.SupportPlayer;
+        else
+            state = State.ChaseBall;
 
-        switch (state)
-        {
-            case State.GoBall:
-                MoveTowards(ball.transform.position, grabBallDistance);
-
-                if (dBall <= grabBallDistance)
-                    state = State.BringBallToPlayer;
-                break;
-
-            case State.BringBallToPlayer:
-                // Ir hacia el jugador
-                MoveTowards(player.position, nearPlayerDistance);
-
-                // Si la pelota se “escapó”, volver a buscarla
-                if (dBall > 3.5f)
-                    state = State.GoBall;
-
-                // Si ya llegó cerca del jugador, pasa
-                if (dPlayer <= nearPlayerDistance && passTimer <= 0f)
-                    state = State.PassToPlayer;
-                break;
-
-            case State.PassToPlayer:
-                Vector3 dir = (player.position - ball.transform.position);
-                if (dir.sqrMagnitude > 0.01f)
-                {
-                    ball.Impulse(dir, passForce);
-                }
-
-                passTimer = passCooldown;
-                state = State.GoBall;
-                break;
-        }
+        // --- Ejecutar estado ---
+        if (state == State.ChaseBall)
+            ChaseBall(iHaveBall);
+        else
+            SupportPlayer();
     }
 
-    void MoveTowards(Vector3 target, float stopDist)
+    void ChaseBall(bool iHaveBall)
     {
-        Vector3 to = target - transform.position;
-        float dist = to.magnitude;
-        if (dist <= stopDist) return;
+        float d = Vector3.Distance(transform.position, ball.position);
 
-        Vector3 step = to.normalized * moveSpeed * Time.deltaTime;
-        transform.position += step;
+        // Si llegué a la pelota, la “tomo” y decido pasar
+        if (d <= stopDistanceToBall)
+        {
+            ballOwnership.SetHolder(transform);
 
-        // Mirar hacia donde va
-        if (to != Vector3.zero)
-            transform.rotation = Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(to), 8f * Time.deltaTime);
+            // Intentar pase al jugador (solo si cooldown y el jugador no está pegado)
+            if (Time.time >= nextPassTime)
+            {
+                float dp = Vector3.Distance(player.position, transform.position);
+                if (dp > 2f)
+                {
+                    PassToPlayer();
+                    nextPassTime = Time.time + passCooldown;
+
+                    // Después del pase, dejo de “tenerla”
+                    ballOwnership.ClearHolder(transform);
+                }
+            }
+
+            // No seguir empujando infinito: me quedo cerca
+            return;
+        }
+
+        // Si no he llegado, me muevo hacia la pelota
+        MoveTowards(ball.position);
+    }
+
+    void SupportPlayer()
+    {
+        // Me ubico cerca del jugador, no encima.
+        Vector3 toMe = (transform.position - player.position);
+        Vector3 offsetDir = toMe.sqrMagnitude < 0.01f ? player.right : toMe.normalized;
+        Vector3 target = player.position + offsetDir * supportDistanceToPlayer;
+
+        MoveTowards(target);
+    }
+
+    void MoveTowards(Vector3 target)
+    {
+        Vector3 dir = (target - transform.position);
+        dir.y = 0f;
+
+        if (dir.sqrMagnitude < 0.05f) return;
+
+        dir.Normalize();
+        controller.Move(dir * speed * Time.deltaTime);
+
+        // opcional: mirar hacia donde va
+        if (dir.sqrMagnitude > 0.001f)
+            transform.forward = Vector3.Lerp(transform.forward, dir, 10f * Time.deltaTime);
+    }
+
+    void PassToPlayer()
+    {
+        Rigidbody rb = ball.GetComponent<Rigidbody>();
+        if (rb == null) return;
+
+        Vector3 dir = (player.position - ball.position).normalized;
+
+        // limpia velocidad para que el pase sea consistente
+        rb.velocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        rb.AddForce(dir * passForce, ForceMode.VelocityChange);
     }
 }
