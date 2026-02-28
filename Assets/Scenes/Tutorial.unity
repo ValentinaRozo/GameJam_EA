@@ -1033,6 +1033,10 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 347314350}
     m_Modifications:
+    - target: {fileID: -6057140222963153312, guid: 82a2914d8f86c62488456950c8330e38, type: 3}
+      propertyPath: m_Controller
+      value: 
+      objectReference: {fileID: 9100000, guid: 535d24752e3d6444da644e79e90ec2ca, type: 2}
     - target: {fileID: -4216859302048453862, guid: 82a2914d8f86c62488456950c8330e38, type: 3}
       propertyPath: m_RootOrder
       value: 0
@@ -2081,11 +2085,14 @@ MonoBehaviour:
     Press
     E to move up.
 
+    Press T to pause.
+
 
     Time to start the game!
 
 
-    DEFEND THE EARTH!!!'
+    DEFEND
+    THE EARTH!!!'
   charDelay: 0.08
   typingAudio: {fileID: 519612642}
   continueAudio: {fileID: 1087935116}
