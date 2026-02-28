@@ -6,10 +6,6 @@ public class PlayerSpaceController : MonoBehaviour
     [Header("Movement")]
     public float speed = 8f;
 
-    [Header("Rotation")]
-    public float mouseSensitivity = 3f;
-    public float verticalRotationLimit = 80f;
-
     [Header("Team")]
     [Tooltip("Team identifier: A or B")]
     public string teamID = "A";
@@ -18,9 +14,13 @@ public class PlayerSpaceController : MonoBehaviour
     public Transform sphereCenter;
     public float boundaryRadius = 23.5f;
 
+    [Header("Camera Setup")]
+    [Tooltip("The main camera of the scene")]
+    public Camera mainCamera;
+    [Tooltip("FollowCamera script para tercera persona")]
+    public FollowCamera followCamera;
+
     private CharacterController controller;
-    private float rotationX = 0f;
-    private float rotationY = 0f;
 
     void Awake()
     {
@@ -29,10 +29,9 @@ public class PlayerSpaceController : MonoBehaviour
         if (sphereCenter == null)
             sphereCenter = GameObject.Find("SceneSphere")?.transform;
 
-        // Initialize rotation from current transform so there is no snap on start
-        Vector3 startAngles = transform.eulerAngles;
-        rotationX = startAngles.y;
-        rotationY = startAngles.x;
+        // Desanclar la cámara del jugador si quedó parenteada
+        if (mainCamera != null)
+            mainCamera.transform.SetParent(null);
 
         Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
@@ -40,21 +39,31 @@ public class PlayerSpaceController : MonoBehaviour
 
     void Update()
     {
-        HandleRotation();
+        HandleCursorToggle();
         HandleMovement();
     }
 
-    void HandleRotation()
+    void HandleCursorToggle()
     {
-        rotationX += Input.GetAxis("Mouse X") * mouseSensitivity;
-        rotationY -= Input.GetAxis("Mouse Y") * mouseSensitivity;
-        rotationY = Mathf.Clamp(rotationY, -verticalRotationLimit, verticalRotationLimit);
-
-        transform.rotation = Quaternion.Euler(rotationY, rotationX, 0f);
+        if (Input.GetKeyDown(KeyCode.Escape))
+        {
+            if (Cursor.lockState == CursorLockMode.Locked)
+            {
+                Cursor.lockState = CursorLockMode.None;
+                Cursor.visible = true;
+            }
+            else
+            {
+                Cursor.lockState = CursorLockMode.Locked;
+                Cursor.visible = false;
+            }
+        }
     }
 
     void HandleMovement()
     {
+        if (mainCamera == null) return;
+
         float x = 0f, z = 0f, y = 0f;
 
         if (Input.GetKey(KeyCode.A) || Input.GetKey(KeyCode.LeftArrow)) x = -1f;
@@ -64,8 +73,19 @@ public class PlayerSpaceController : MonoBehaviour
         if (Input.GetKey(KeyCode.E)) y = 1f;
         if (Input.GetKey(KeyCode.Q)) y = -1f;
 
-        Vector3 move = transform.right * x + transform.forward * z + transform.up * y;
+        // Movimiento relativo a la cámara
+        Vector3 move = mainCamera.transform.right * x
+                     + mainCamera.transform.forward * z
+                     + mainCamera.transform.up * y;
+
         if (move.sqrMagnitude > 1f) move.Normalize();
+
+        // Rotar el jugador suavemente hacia la dirección de movimiento
+        if (move.sqrMagnitude > 0.001f)
+            transform.rotation = Quaternion.Slerp(
+                transform.rotation,
+                Quaternion.LookRotation(move),
+                10f * Time.deltaTime);
 
         controller.Move(move * speed * Time.deltaTime);
     }

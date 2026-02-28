@@ -2,8 +2,11 @@ using UnityEngine;
 
 public class FollowCamera : MonoBehaviour
 {
+    [Header("Target")]
     public Transform target;
     public float distance = 6f;
+
+    [Header("Mouse Look")]
     public float mouseSensitivity = 3f;
     public float minY = -40f;
     public float maxY = 80f;
@@ -17,26 +20,32 @@ public class FollowCamera : MonoBehaviour
 
     void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked;
-        Cursor.visible = false;
-
         if (sphereCenter == null)
             sphereCenter = GameObject.Find("SceneSphere")?.transform;
+
+        // Iniciar con los ángulos actuales para evitar snap
+        currentX = transform.eulerAngles.y;
+        currentY = transform.eulerAngles.x;
+
+        // Garantizar que la cámara no tenga padre
+        transform.SetParent(null);
     }
 
     void LateUpdate()
     {
         if (target == null) return;
 
-        currentX += Input.GetAxis("Mouse X") * mouseSensitivity;
-        currentY -= Input.GetAxis("Mouse Y") * mouseSensitivity;
-        currentY = Mathf.Clamp(currentY, minY, maxY);
+        if (Cursor.lockState == CursorLockMode.Locked)
+        {
+            currentX += Input.GetAxis("Mouse X") * mouseSensitivity;
+            currentY -= Input.GetAxis("Mouse Y") * mouseSensitivity;
+            currentY = Mathf.Clamp(currentY, minY, maxY);
+        }
 
         Quaternion rotation = Quaternion.Euler(currentY, currentX, 0);
-        Vector3 direction = new Vector3(0, 0, -distance);
-        Vector3 desiredPos = target.position + rotation * direction;
+        Vector3 desiredPos = target.position + rotation * new Vector3(0, 0, -distance);
 
-        // If desired position is outside the sphere, pull it back inside
+        // Clamp dentro de la esfera
         if (sphereCenter != null)
         {
             Vector3 offset = desiredPos - sphereCenter.position;
