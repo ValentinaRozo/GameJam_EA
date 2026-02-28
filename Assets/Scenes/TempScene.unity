@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.18028378, g: 0.22571412, b: 0.30692285, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -386,7 +386,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 7
+  m_RootOrder: 8
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &288522056
 GameObject:
@@ -511,6 +511,7 @@ MonoBehaviour:
   dribbleForce: 3
   dribbleCooldown: 0.4
   defendTriggerRadius: 12
+  defendApproachThreshold: 0.2
   defendPushDistance: 2.5
   pickupDetectRadius: 15
   separationRadius: 2.5
@@ -518,14 +519,13 @@ MonoBehaviour:
   contactPushRadius: 1.5
   contactPushForce: 10
   contactCooldown: 0.3
-  sphereCenter: {fileID: 0}
-  boundaryRadius: 23
   planetLayer:
     serializedVersion: 2
     m_Bits: 0
   avoidRadius: 3
   pushDamping: 4
-  frozen: 0
+  sphereCenter: {fileID: 0}
+  boundaryRadius: 23
 --- !u!1 &583390790
 GameObject:
   m_ObjectHideFlags: 0
@@ -797,7 +797,7 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
-  m_RootOrder: 8
+  m_RootOrder: 7
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1053032273
 GameObject:
@@ -1071,10 +1071,6 @@ MonoBehaviour:
   sphereCenter: {fileID: 0}
   boundaryRadius: 23.5
   mainCamera: {fileID: 0}
-  followCamera: {fileID: 0}
-  freezeDuration: 3
-  pushDamping: 4
-  frozen: 0
 --- !u!114 &1058447743
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1313,6 +1309,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   ownerTeam: A
+  goalRadius: 3
 --- !u!135 &1698356059
 SphereCollider:
   m_ObjectHideFlags: 0

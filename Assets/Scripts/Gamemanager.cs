@@ -127,7 +127,7 @@ public class GameManager : MonoBehaviour
 
     void UpdateUI()
     {
-        if (scoreTextA != null) scoreTextA.text = scoreA.ToString();
-        if (scoreTextB != null) scoreTextB.text = scoreB.ToString();
+        if (scoreTextA != null) scoreTextA.text = "Team A: " + scoreA;
+        if (scoreTextB != null) scoreTextB.text = "Team B: " + scoreB;
     }
 }
