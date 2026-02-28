@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.2425898, g: 0.23052728, b: 0.27587172, a: 1}
+  m_IndirectSpecularColor: {r: 0.24278489, g: 0.23049471, b: 0.27609462, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -1922,7 +1922,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -220.2, y: 116.4}
+  m_AnchoredPosition: {x: -220.2, y: 138}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1805021798
@@ -2085,7 +2085,7 @@ MonoBehaviour:
     Time to start the game!
 
 
-    DEFEN THE EARTH!!!'
+    DEFEND THE EARTH!!!'
   charDelay: 0.08
   typingAudio: {fileID: 519612642}
   continueAudio: {fileID: 1087935116}
