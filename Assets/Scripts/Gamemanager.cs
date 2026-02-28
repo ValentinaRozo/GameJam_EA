@@ -1,88 +1,69 @@
-
+using System;
 using UnityEngine;
-using System.Collections;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager Instance { get; private set; }
+    public static GameManager Instance;
 
-    [Header("Marcador")]
-    public int scoreTeamA = 0;
-    public int scoreTeamB = 0;
+    [Header("Score")]
+    public int goalsToEnd = 3;
 
-    [Header("Referencias para reset")]
+    [Header("Scenes")]
+    public string winScene = "Win";
+    public string gameOverScene = "GameOver";
+
+    [Header("Reset")]
+    public float freezeDuration = 3f;
+    public Transform ballSpawn;
     public BallPhysics ball;
-    public Transform ballSpawnPoint;
 
-    public Transform playerSpawn;
-    public Transform teamAISpawn;
+    // Todos los scripts se suscriben a este evento
+    public static event Action OnGoalScored;
 
-    public Transform playerObject;
-    public Transform teamAIObject;
-
-    [Header("Pausa tras gol (segundos)")]
-    public float resetDelay = 2f;
-
-    private bool resetting = false;
+    private int scoreA = 0;
+    private int scoreB = 0;
+    private int totalGoals = 0;
+    private bool gameEnded = false;
 
     void Awake()
     {
-        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
-        Instance = this;
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
     }
 
-    public void TeamAScored()
+    public void TeamAScored() { scoreA++; RegisterGoal(); }
+    public void TeamBScored() { scoreB++; RegisterGoal(); }
+
+    void RegisterGoal()
     {
-        if (resetting) return;
-        scoreTeamA++;
-        Debug.Log("GOOL Equipo A! | A:" + scoreTeamA + " - B:" + scoreTeamB);
-        StartCoroutine(ResetAfterGoal());
+        if (gameEnded) return;
+        totalGoals++;
+
+        ResetBall();
+        OnGoalScored?.Invoke();  // Notifica a jugador y AIs
+
+        Debug.Log($"Gol #{totalGoals} | A:{scoreA} - B:{scoreB}");
+
+        if (totalGoals >= goalsToEnd)
+        {
+            gameEnded = true;
+            StartCoroutine(LoadEndScene());
+        }
     }
 
-    public void TeamBScored()
+    void ResetBall()
     {
-        if (resetting) return;
-        scoreTeamB++;
-        Debug.Log("GOOL Equipo B! | A:" + scoreTeamA + " - B:" + scoreTeamB);
-        StartCoroutine(ResetAfterGoal());
+        if (ball == null || ballSpawn == null) return;
+        Rigidbody rb = ball.GetComponent<Rigidbody>();
+        if (rb != null) { rb.velocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
+        ball.transform.position = ballSpawn.position;
+        ball.lastToucherTeam = "";
     }
 
-    IEnumerator ResetAfterGoal()
+    System.Collections.IEnumerator LoadEndScene()
     {
-        resetting = true;
-
-        // Freeze ball
-        if (ball != null)
-        {
-            ball.rb.velocity = Vector3.zero;
-            ball.rb.angularVelocity = Vector3.zero;
-        }
-
-        yield return new WaitForSeconds(resetDelay);
-
-        // Reposition ball
-        if (ball != null && ballSpawnPoint != null)
-        {
-            ball.transform.position = ballSpawnPoint.position;
-            ball.rb.velocity = Vector3.zero;
-            ball.rb.angularVelocity = Vector3.zero;
-            ball.lastToucherTeam = "";
-        }
-
-        // Reposition player
-        if (playerObject != null && playerSpawn != null)
-        {
-            // CharacterController must be disabled to teleport
-            CharacterController cc = playerObject.GetComponent<CharacterController>();
-            if (cc != null) cc.enabled = false;
-            playerObject.position = playerSpawn.position;
-            if (cc != null) cc.enabled = true;
-        }
-
-        // Reposition AI
-        if (teamAIObject != null && teamAISpawn != null)
-            teamAIObject.position = teamAISpawn.position;
-
-        resetting = false;
+        yield return new WaitForSeconds(freezeDuration);
+        SceneManager.LoadScene(scoreA >= scoreB ? winScene : gameOverScene);
     }
 }

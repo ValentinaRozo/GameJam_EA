@@ -28,8 +28,21 @@ public class TeamAI : MonoBehaviour
     public Transform sphereCenter;
     public float boundaryRadius = 23f;
 
+    [Header("Spawn")]
+    public Transform spawnPoint;
+    public float freezeDuration = 3f;
+
+    [Header("Obstacle Avoidance")]
+    public LayerMask planetLayer;
+    public float avoidRadius = 3f;
+
+    [Header("Push")]
+    public float pushDamping = 4f;
+
     private float shootTimer = 0f;
     private float dribbleTimer = 0f;
+    private bool frozen = false;
+    private Vector3 externalVelocity = Vector3.zero;
 
     private enum State { GoBall, CarryToPlanet, Shoot }
     private State state = State.GoBall;
@@ -40,9 +53,55 @@ public class TeamAI : MonoBehaviour
             sphereCenter = GameObject.Find("SceneSphere")?.transform;
     }
 
+    void OnEnable()
+    {
+        if (GameManager.Instance != null)
+            GameManager.OnGoalScored += OnGoalScored;
+    }
+
+    void OnDisable()
+    {
+        GameManager.OnGoalScored -= OnGoalScored;
+    }
+
+    void OnGoalScored()
+    {
+        if (spawnPoint != null)
+        {
+            transform.position = spawnPoint.position;
+            transform.rotation = spawnPoint.rotation;
+        }
+
+        externalVelocity = Vector3.zero;
+        state = State.GoBall;
+        frozen = true;
+        Invoke(nameof(Unfreeze), freezeDuration);
+    }
+
+    void Unfreeze()
+    {
+        frozen = false;
+    }
+
+    public void ApplyPush(Vector3 force)
+    {
+        externalVelocity += force;
+    }
+
     void Update()
     {
+        if (frozen) return;
         if (ball == null || targetPlanet == null) return;
+
+        // Aplicar empujes externos
+        if (externalVelocity.sqrMagnitude > 0.01f)
+        {
+            transform.position += externalVelocity * Time.deltaTime;
+            externalVelocity = Vector3.Lerp(
+                externalVelocity,
+                Vector3.zero,
+                pushDamping * Time.deltaTime);
+        }
 
         shootTimer -= Time.deltaTime;
         dribbleTimer -= Time.deltaTime;
@@ -52,10 +111,8 @@ public class TeamAI : MonoBehaviour
 
         switch (state)
         {
-            // State 1: Go pick up the ball
             case State.GoBall:
                 MoveTo(ball.transform.position, grabBallDistance);
-
                 if (dBall <= grabBallDistance)
                 {
                     ball.RegisterTouch(teamID);
@@ -63,9 +120,7 @@ public class TeamAI : MonoBehaviour
                 }
                 break;
 
-            // State 2: Carry the ball toward the enemy planet
             case State.CarryToPlanet:
-                // Ball stolen or lost
                 if (dBall > grabBallDistance * 3f)
                 {
                     state = State.GoBall;
@@ -74,7 +129,6 @@ public class TeamAI : MonoBehaviour
 
                 MoveTo(targetPlanet.position, shootDistance);
 
-                // Dribble: nudge ball toward planet on a cooldown to avoid velocity reset spam
                 if (dBall <= grabBallDistance && dribbleTimer <= 0f)
                 {
                     Vector3 toPlanet = (targetPlanet.position - ball.transform.position).normalized;
@@ -88,11 +142,10 @@ public class TeamAI : MonoBehaviour
 
                 break;
 
-            // State 3: Shoot at the planet
             case State.Shoot:
                 if (dBall <= grabBallDistance * 2f)
                 {
-                    Vector3 shootDir = (targetPlanet.position - ball.transform.position);
+                    Vector3 shootDir = targetPlanet.position - ball.transform.position;
                     ball.RegisterTouch(teamID);
                     ball.Impulse(shootDir, shootForce);
                     shootTimer = shootCooldown;
@@ -113,18 +166,32 @@ public class TeamAI : MonoBehaviour
         float dist = to.magnitude;
         if (dist <= stopDist) return;
 
-        transform.position += to.normalized * moveSpeed * Time.deltaTime;
+        Vector3 dir = to.normalized;
 
-        if (to != Vector3.zero)
+        // Evitar planetas
+        Collider[] obstacles = Physics.OverlapSphere(transform.position, avoidRadius, planetLayer);
+        foreach (var obs in obstacles)
+        {
+            Vector3 away = transform.position - obs.transform.position;
+            dir += away.normalized * 2f;
+        }
+
+        dir = dir.normalized;
+        transform.position += dir * moveSpeed * Time.deltaTime;
+
+        if (dir != Vector3.zero)
+        {
             transform.rotation = Quaternion.Slerp(
                 transform.rotation,
-                Quaternion.LookRotation(to),
+                Quaternion.LookRotation(dir),
                 8f * Time.deltaTime);
+        }
     }
 
     void EnforceBoundary()
     {
         if (sphereCenter == null) return;
+
         Vector3 offset = transform.position - sphereCenter.position;
         if (offset.magnitude > boundaryRadius)
             transform.position = sphereCenter.position + offset.normalized * boundaryRadius;

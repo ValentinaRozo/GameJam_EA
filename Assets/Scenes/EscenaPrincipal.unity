@@ -167,6 +167,13 @@ MonoBehaviour:
   dribbleCooldown: 0.4
   sphereCenter: {fileID: 1369431155}
   boundaryRadius: 23
+  spawnPoint: {fileID: 0}
+  freezeDuration: 3
+  planetLayer:
+    serializedVersion: 2
+    m_Bits: 0
+  avoidRadius: 3
+  pushDamping: 4
 --- !u!136 &70144314
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -259,7 +266,8 @@ GameObject:
   - component: {fileID: 618374788}
   - component: {fileID: 618374787}
   - component: {fileID: 618374786}
-  - component: {fileID: 618374791}
+  - component: {fileID: 618374792}
+  - component: {fileID: 618374793}
   m_Layer: 0
   m_Name: PlanetB
   m_TagString: Untagged
@@ -293,7 +301,7 @@ SphereCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 618374785}
   m_Material: {fileID: 0}
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.5
@@ -363,7 +371,23 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 3
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &618374791
+--- !u!54 &618374792
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 618374785}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &618374793
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -621,7 +645,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 806101193}
-  - component: {fileID: 806101192}
+  - component: {fileID: 806101194}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -629,27 +653,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &806101192
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 806101191}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: e639aa2c0adc5f34e876673917b59031, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  scoreTeamA: 0
-  scoreTeamB: 0
-  ball: {fileID: 1332214966}
-  ballSpawnPoint: {fileID: 693153716}
-  playerSpawn: {fileID: 1914069496}
-  teamAISpawn: {fileID: 1958564085}
-  playerObject: {fileID: 1818923320}
-  teamAIObject: {fileID: 70144317}
-  resetDelay: 2
 --- !u!4 &806101193
 Transform:
   m_ObjectHideFlags: 0
@@ -665,6 +668,24 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 13
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &806101194
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 806101191}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e639aa2c0adc5f34e876673917b59031, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  goalsToEnd: 3
+  winScene: Win
+  gameOverScene: GameOver
+  freezeDuration: 3
+  ballSpawn: {fileID: 693153716}
+  ball: {fileID: 1332214966}
 --- !u!1 &963194225
 GameObject:
   m_ObjectHideFlags: 0
@@ -1025,7 +1046,7 @@ GameObject:
   - component: {fileID: 1658491134}
   m_Layer: 0
   m_Name: AsteroidSpawner
-  m_TagString: Untagged
+  m_TagString: Asteroid
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -1043,8 +1064,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   asteroidPrefab: {fileID: 13507958783302758, guid: 9857ee729c31f364b9eb4d994da82dda, type: 3}
-  asteroidCount: 18
-  spawnRadius: 20
+  asteroidCount: 24
+  spawnRadius: 25
   sphereCenter: {fileID: 1369431155}
   minScale: 0.5
   maxScale: 1.8
@@ -1107,6 +1128,13 @@ MonoBehaviour:
   dribbleCooldown: 0.4
   sphereCenter: {fileID: 1369431155}
   boundaryRadius: 23
+  spawnPoint: {fileID: 1958564085}
+  freezeDuration: 3
+  planetLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  avoidRadius: 3
+  pushDamping: 4
 --- !u!136 &1740080477
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -1230,6 +1258,13 @@ MonoBehaviour:
   dribbleCooldown: 0.4
   sphereCenter: {fileID: 1369431155}
   boundaryRadius: 23
+  spawnPoint: {fileID: 1958564085}
+  freezeDuration: 3
+  planetLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  avoidRadius: 3
+  pushDamping: 4
 --- !u!136 &1807589896
 CapsuleCollider:
   m_ObjectHideFlags: 0
@@ -1397,6 +1432,9 @@ MonoBehaviour:
   boundaryRadius: 23.5
   mainCamera: {fileID: 963194227}
   followCamera: {fileID: 963194229}
+  spawnPoint: {fileID: 1914069496}
+  freezeDuration: 3
+  pushDamping: 4
 --- !u!143 &1818923324
 CharacterController:
   m_ObjectHideFlags: 0
@@ -1554,7 +1592,8 @@ GameObject:
   - component: {fileID: 1968282574}
   - component: {fileID: 1968282573}
   - component: {fileID: 1968282572}
-  - component: {fileID: 1968282577}
+  - component: {fileID: 1968282578}
+  - component: {fileID: 1968282579}
   m_Layer: 0
   m_Name: PlanetA
   m_TagString: Untagged
@@ -1588,7 +1627,7 @@ SphereCollider:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1968282571}
   m_Material: {fileID: 0}
-  m_IsTrigger: 1
+  m_IsTrigger: 0
   m_Enabled: 1
   serializedVersion: 2
   m_Radius: 0.5
@@ -1658,7 +1697,23 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 2
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &1968282577
+--- !u!54 &1968282578
+Rigidbody:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1968282571}
+  serializedVersion: 2
+  m_Mass: 1
+  m_Drag: 0
+  m_AngularDrag: 0.05
+  m_UseGravity: 0
+  m_IsKinematic: 1
+  m_Interpolate: 0
+  m_Constraints: 0
+  m_CollisionDetection: 0
+--- !u!114 &1968282579
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
